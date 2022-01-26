@@ -2,120 +2,119 @@
 @using BlazorFileParser.Data
 @inject FileProcessingService fileProcessingService
 
-<PageTitle>Blazor file parser</PageTitle> 
+<PageTitle>Blazor file parser</PageTitle>
 
 <div class="container">
-	<div class="row">
-		<form>
-			<div class="form-group">
-				<label for="fileInput">Specify file to process</label>
-				<InputFile OnChange="@LoadFile" accept=".txt" id="fileInput" class="form-control" />
-			</div>
-		</form>
-	</div>
-	<div class="row p-3">
-		@if (isLoading)
-		{
-			<div class="alert alert-info" role="alert">Processing file...</div>
-		}
-		else if (hasErrors)
-		{
-			<div class="alert alert-danger text-break" role="alert">
-				@errorMessage
-			</div>
-			if (errorLines.Any())
-			{
-				<h4>Invalid records</h4>
-				<ul class="list-group">
-					@foreach (var errorLine in errorLines)
-					{
-						<li class="list-group-item">@errorLine</li>
-					}
-				</ul>
+    <div class="row">
+        <form>
+            <div class="form-group">
+                <label for="fileInput">Specify file to process</label>
+                <InputFile OnChange="@LoadFile" accept=".txt" id="fileInput" class="form-control" />
+            </div>
+        </form>
+    </div>
+    <div class="row p-3">
+        @if (isLoading)
+        {
+            <div class="alert alert-info" role="alert">Processing file...</div>
+        }
+        else if (hasErrors)
+        {
+            <div class="alert alert-danger text-break" role="alert">
+                @errorMessage
+            </div>
+            if (errorLines.Any())
+            {
+                <h4>Invalid records</h4>
+                <ul class="list-group">
+                    @foreach (var errorLine in errorLines)
+                    {
+                        <li class="list-group-item">@errorLine</li>
+                    }
+                </ul>
+            }
+        }
+        else if (events.Any())
+        {
+            <div class="alert alert-success" role="alert">File processed successfully</div>
 
-			}
-		}
-		else if (events.Any())
-		{
-			<div class="alert alert-success" role="alert">File processed successfully</div>
-
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Description</th>
-						<th>Start</th>
-						<th>End</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var eventToDisplay in events)
-					{
-						<tr>
-							<td class="text-break">@eventToDisplay.Name</td>
-							<td class="text-break">@eventToDisplay.Description</td>
-							<td>@eventToDisplay.Start.ToString("yyyy-MM-ddTHH:mmzzz")</td>
-							<td>@eventToDisplay.End.ToString("yyyy-MM-ddTHH:mmzzz")</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-		}
-	</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var eventToDisplay in events)
+                    {
+                        <tr>
+                            <td class="text-break">@eventToDisplay.Name</td>
+                            <td class="text-break">@eventToDisplay.Description</td>
+                            <td>@eventToDisplay.Start.ToString("yyyy-MM-ddTHH:mmzzz")</td>
+                            <td>@eventToDisplay.End.ToString("yyyy-MM-ddTHH:mmzzz")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
 </div>
 
 @code {
 
-	private bool isLoading;
-	private List<EventRecord> events = new();
-	private bool hasErrors;
-	private string errorMessage = "";
-	private List<string> errorLines = new();
+    private bool isLoading;
+    private List<EventRecord> events = new();
+    private bool hasErrors;
+    private string errorMessage = "";
+    private List<string> errorLines = new();
 
-	private async Task LoadFile(InputFileChangeEventArgs e)
-	{
-		isLoading = true;
-		ClearError();
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        ClearError();
 
-		try
-		{
-			var processingResult = await fileProcessingService.ProcessFile<EventRecord>(e.File);
-			if (processingResult.IsSuccess)
-			{
-				events = processingResult.Records ?? new();
-			}
-			else
-			{
-				SetError(processingResult.ErrorMessage ?? "", processingResult.InvalidLines);
-			}
-		}
-		catch (Exception)
-		{
-			SetError("Unexpected error occurred");
-		}
-		finally
-		{
-			isLoading = false;
-		}
-	}
+        try
+        {
+            var processingResult = await fileProcessingService.ProcessFile<EventRecord>(e.File);
+            if (processingResult.IsSuccess)
+            {
+                events = processingResult.Records ?? new();
+            }
+            else
+            {
+                SetError(processingResult.ErrorMessage ?? "", processingResult.InvalidLines);
+            }
+        }
+        catch (Exception)
+        {
+            SetError("Unexpected error occurred");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
 
-	private void ClearError()
-	{
-		hasErrors = false;
-		errorMessage = "";
-	}
+    private void ClearError()
+    {
+        hasErrors = false;
+        errorMessage = "";
+    }
 
-	private void SetError(string message, List<string>? invalidLines = null)
-	{
-		hasErrors = true;
-		errorMessage = message;
-		if (invalidLines != null)
-		{
-			errorLines = invalidLines;
-		}
-		else
-		{
-			errorLines = new List<string>();
-		}
-	}
+    private void SetError(string message, List<string>? invalidLines = null)
+    {
+        hasErrors = true;
+        errorMessage = message;
+        if (invalidLines != null)
+        {
+            errorLines = invalidLines;
+        }
+        else
+        {
+            errorLines = new List<string>();
+        }
+    }
 }
